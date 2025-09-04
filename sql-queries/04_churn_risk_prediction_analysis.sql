@@ -1,267 +1,144 @@
 -- =================================================================
 -- CHURN RISK PREDICTION ANALYSIS [MEDIUM]
 -- =================================================================
--- Business Question: Which customers are at highest risk of churning?
+-- Business Question: Which customers are at risk of churning?
 -- Strategic Value: Proactive retention strategies and revenue protection
--- Technical Implementation: Behavioral pattern analysis with risk scoring
+-- Technical Implementation: Risk scoring based on customer behavior patterns
 
-WITH customer_activity_timeline AS (
-    -- Create detailed customer activity timeline
-    SELECT 
-        user_pseudo_id as customer_id,
-        DATE(TIMESTAMP_MICROS(event_timestamp)) as activity_date,
-        event_name,
-        -- Calculate days since last activity
-        DATE_DIFF(
-            CURRENT_DATE(), 
-            DATE(TIMESTAMP_MICROS(event_timestamp)), 
-            DAY
-        ) as days_since_activity,
-        -- Track purchase events specifically
-        CASE WHEN event_name = 'purchase' THEN 1 ELSE 0 END as is_purchase,
-        -- Extract purchase value
-        COALESCE(
-            (SELECT CAST(value.double_value AS NUMERIC) 
-             FROM UNNEST(event_params) 
-             WHERE key = 'value'), 
-            (SELECT CAST(value.int_value AS NUMERIC) 
-             FROM UNNEST(event_params) 
-             WHERE key = 'value'),
-            0
-        ) as event_value
-    FROM `bigquery-public-data.ga4_obfuscated_sample_ecommerce.events_*`
-    WHERE _TABLE_SUFFIX BETWEEN '20201101' AND '20210131'
-),
-
-customer_behavioral_patterns AS (
-    -- Analyze customer behavior patterns for churn indicators
-    SELECT 
-        customer_id,
-        -- Recency metrics (key churn indicators)
-        MIN(days_since_activity) as days_since_last_activity,
-        MIN(CASE WHEN is_purchase = 1 THEN days_since_activity END) as days_since_last_purchase,
-        MIN(CASE WHEN event_name = 'page_view' THEN days_since_activity END) as days_since_last_visit,
-        MIN(CASE WHEN event_name = 'add_to_cart' THEN days_since_activity END) as days_since_last_cart_add,
-        
-        -- Frequency metrics
-        COUNT(DISTINCT activity_date) as total_active_days,
-        COUNT(*) as total_events,
-        SUM(is_purchase) as total_purchases,
-        COUNT(CASE WHEN event_name = 'page_view' THEN 1 END) as total_page_views,
-        COUNT(CASE WHEN event_name = 'add_to_cart' THEN 1 END) as total_cart_adds,
-        COUNT(CASE WHEN event_name = 'session_start' THEN 1 END) as total_sessions,
-        
-        -- Monetary metrics
-        SUM(CASE WHEN is_purchase = 1 THEN event_value ELSE 0 END) as total_purchase_value,
-        AVG(CASE WHEN is_purchase = 1 THEN event_value END) as avg_order_value,
-        
-        -- Activity timeline
-        MIN(activity_date) as first_activity_date,
-        MAX(activity_date) as last_activity_date,
-        DATE_DIFF(MAX(activity_date), MIN(activity_date), DAY) + 1 as customer_lifespan_days,
-        
-        -- Engagement patterns
-        COUNT(DISTINCT DATE_TRUNC(activity_date, WEEK)) as active_weeks,
-        COUNT(DISTINCT DATE_TRUNC(activity_date, MONTH)) as active_months
-    FROM customer_activity_timeline
-    GROUP BY customer_id
-),
-
-churn_risk_scoring AS (
-    -- Calculate comprehensive churn risk scores
-    SELECT 
-        customer_id,
-        days_since_last_activity,
-        days_since_last_purchase,
-        days_since_last_visit,
-        total_active_days,
-        total_events,
-        total_purchases,
-        total_purchase_value,
-        avg_order_value,
-        customer_lifespan_days,
-        active_weeks,
-        active_months,
-        
-        -- Recency risk scores (higher days = higher risk)
-        CASE 
-            WHEN days_since_last_activity <= 7 THEN 1
-            WHEN days_since_last_activity <= 14 THEN 2
-            WHEN days_since_last_activity <= 30 THEN 3
-            WHEN days_since_last_activity <= 60 THEN 4
-            WHEN days_since_last_activity <= 90 THEN 5
-            ELSE 6
-        END as recency_risk_score,
-        
-        -- Purchase recency risk
-        CASE 
-            WHEN days_since_last_purchase IS NULL THEN 6  -- Never purchased
-            WHEN days_since_last_purchase <= 14 THEN 1
-            WHEN days_since_last_purchase <= 30 THEN 2
-            WHEN days_since_last_purchase <= 60 THEN 3
-            WHEN days_since_last_purchase <= 90 THEN 4
-            WHEN days_since_last_purchase <= 180 THEN 5
-            ELSE 6
-        END as purchase_recency_risk,
-        
-        -- Frequency risk scores (lower frequency = higher risk)
-        CASE 
-            WHEN total_purchases >= 5 THEN 1
-            WHEN total_purchases >= 3 THEN 2
-            WHEN total_purchases >= 2 THEN 3
-            WHEN total_purchases >= 1 THEN 4
-            ELSE 6  -- No purchases
-        END as purchase_frequency_risk,
-        
-        -- Engagement risk scores
-        CASE 
-            WHEN total_active_days >= 20 THEN 1
-            WHEN total_active_days >= 10 THEN 2
-            WHEN total_active_days >= 5 THEN 3
-            WHEN total_active_days >= 2 THEN 4
-            WHEN total_active_days = 1 THEN 5
-            ELSE 6
-        END as engagement_risk_score,
-        
-        -- Activity pattern analysis
-        CASE 
-            WHEN customer_lifespan_days > 0 
-            THEN ROUND(total_active_days / customer_lifespan_days * 100, 2)
-            ELSE 0
-        END as activity_consistency_percent,
-        
-        -- Session engagement
-        CASE 
-            WHEN total_sessions > 0 
-            THEN ROUND(total_page_views / total_sessions, 2)
-            ELSE 0
-        END as avg_pages_per_session
-    FROM customer_behavioral_patterns
-),
-
-final_churn_risk_assessment AS (
-    -- Create final churn risk assessment with composite scoring
-    SELECT 
-        customer_id,
-        days_since_last_activity,
-        days_since_last_purchase,
-        total_purchases,
-        total_purchase_value,
-        avg_order_value,
-        customer_lifespan_days,
-        activity_consistency_percent,
-        avg_pages_per_session,
-        recency_risk_score,
-        purchase_recency_risk,
-        purchase_frequency_risk,
-        engagement_risk_score,
-        
-        -- Composite churn risk score (weighted average)
-        ROUND(
-            (recency_risk_score * 0.3) +           -- 30% weight on general recency
-            (purchase_recency_risk * 0.35) +       -- 35% weight on purchase recency
-            (purchase_frequency_risk * 0.25) +     -- 25% weight on purchase frequency
-            (engagement_risk_score * 0.1),         -- 10% weight on engagement
-            2
-        ) as composite_churn_risk_score,
-        
-        -- Risk category classification
-        CASE 
-            WHEN (
-                (recency_risk_score * 0.3) +
-                (purchase_recency_risk * 0.35) +
-                (purchase_frequency_risk * 0.25) +
-                (engagement_risk_score * 0.1)
-            ) >= 5.0 THEN 'Critical Risk'
-            WHEN (
-                (recency_risk_score * 0.3) +
-                (purchase_recency_risk * 0.35) +
-                (purchase_frequency_risk * 0.25) +
-                (engagement_risk_score * 0.1)
-            ) >= 4.0 THEN 'High Risk'
-            WHEN (
-                (recency_risk_score * 0.3) +
-                (purchase_recency_risk * 0.35) +
-                (purchase_frequency_risk * 0.25) +
-                (engagement_risk_score * 0.1)
-            ) >= 3.0 THEN 'Medium Risk'
-            WHEN (
-                (recency_risk_score * 0.3) +
-                (purchase_recency_risk * 0.35) +
-                (purchase_frequency_risk * 0.25) +
-                (engagement_risk_score * 0.1)
-            ) >= 2.0 THEN 'Low Risk'
-            ELSE 'Very Low Risk'
-        END as churn_risk_category,
-        
-        -- Strategic retention recommendations
-        CASE 
-            WHEN (
-                (recency_risk_score * 0.3) +
-                (purchase_recency_risk * 0.35) +
-                (purchase_frequency_risk * 0.25) +
-                (engagement_risk_score * 0.1)
-            ) >= 5.0 THEN 'Immediate intervention: Personal outreach, special offers'
-            WHEN (
-                (recency_risk_score * 0.3) +
-                (purchase_recency_risk * 0.35) +
-                (purchase_frequency_risk * 0.25) +
-                (engagement_risk_score * 0.1)
-            ) >= 4.0 THEN 'Urgent: Targeted email campaign, discount offers'
-            WHEN (
-                (recency_risk_score * 0.3) +
-                (purchase_recency_risk * 0.35) +
-                (purchase_frequency_risk * 0.25) +
-                (engagement_risk_score * 0.1)
-            ) >= 3.0 THEN 'Monitor: Re-engagement campaigns, content marketing'
-            ELSE 'Maintain: Continue regular marketing, loyalty programs'
-        END as retention_recommendation
-    FROM churn_risk_scoring
-)
-
--- EXECUTIVE SUMMARY: Churn Risk Analysis
+-- Customer churn risk analysis
 SELECT 
-    churn_risk_category,
-    COUNT(*) as customer_count,
-    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) as risk_segment_percentage,
-    -- Risk metrics
-    ROUND(AVG(composite_churn_risk_score), 2) as avg_risk_score,
-    ROUND(AVG(days_since_last_activity), 1) as avg_days_since_last_activity,
-    ROUND(AVG(COALESCE(days_since_last_purchase, 365)), 1) as avg_days_since_last_purchase,
-    -- Business impact
-    ROUND(SUM(COALESCE(total_purchase_value, 0)), 2) as total_revenue_at_risk,
-    ROUND(AVG(COALESCE(total_purchase_value, 0)), 2) as avg_customer_value,
-    ROUND(AVG(total_purchases), 1) as avg_purchase_frequency,
-    -- Strategic actions
-    retention_recommendation as recommended_action
-FROM final_churn_risk_assessment
-GROUP BY churn_risk_category, retention_recommendation
-ORDER BY avg_risk_score DESC;
-
--- =================================================================
--- HIGH-RISK CUSTOMERS DETAILED ANALYSIS
--- =================================================================
-SELECT 
-    'HIGH RISK CUSTOMERS' as analysis_type,
     customer_id,
-    churn_risk_category,
-    composite_churn_risk_score,
-    days_since_last_activity,
+    last_purchase_date,
     days_since_last_purchase,
     total_purchases,
-    total_purchase_value,
-    activity_consistency_percent,
-    retention_recommendation
-FROM final_churn_risk_assessment
-WHERE churn_risk_category IN ('Critical Risk', 'High Risk')
-ORDER BY composite_churn_risk_score DESC, total_purchase_value DESC
+    total_spent,
+    avg_order_value,
+    -- Calculate churn risk score (higher score = higher risk)
+    CASE 
+        WHEN days_since_last_purchase >= 90 THEN 5
+        WHEN days_since_last_purchase >= 60 THEN 4
+        WHEN days_since_last_purchase >= 30 THEN 3
+        WHEN days_since_last_purchase >= 14 THEN 2
+        ELSE 1
+    END +
+    CASE 
+        WHEN total_purchases = 1 THEN 3
+        WHEN total_purchases = 2 THEN 2
+        WHEN total_purchases <= 5 THEN 1
+        ELSE 0
+    END as churn_risk_score,
+    -- Risk category classification
+    CASE 
+        WHEN days_since_last_purchase >= 90 AND total_purchases <= 2 THEN 'Critical Risk'
+        WHEN days_since_last_purchase >= 60 THEN 'High Risk'
+        WHEN days_since_last_purchase >= 30 THEN 'Medium Risk'
+        WHEN days_since_last_purchase >= 14 THEN 'Low Risk'
+        ELSE 'Active Customer'
+    END as risk_category,
+    -- Customer value assessment
+    CASE 
+        WHEN total_spent >= 1000 THEN 'High Value'
+        WHEN total_spent >= 300 THEN 'Medium Value'
+        WHEN total_spent >= 100 THEN 'Low Value'
+        ELSE 'Minimal Value'
+    END as customer_value
+FROM (
+    -- Calculate customer behavior metrics
+    SELECT 
+        customer_id,
+        MAX(purchase_date) as last_purchase_date,
+        CURRENT_DATE - MAX(purchase_date) as days_since_last_purchase,
+        COUNT(*) as total_purchases,
+        SUM(purchase_amount) as total_spent,
+        ROUND(AVG(purchase_amount), 2) as avg_order_value
+    FROM customer_transactions
+    WHERE purchase_amount > 0
+    GROUP BY customer_id
+) customer_behavior
+ORDER BY churn_risk_score DESC, total_spent DESC;
+
+-- Churn risk summary by category
+SELECT 
+    risk_category,
+    COUNT(*) as customer_count,
+    ROUND(AVG(days_since_last_purchase), 0) as avg_days_inactive,
+    ROUND(AVG(total_purchases), 1) as avg_purchases,
+    ROUND(AVG(total_spent), 2) as avg_spent,
+    ROUND(SUM(total_spent), 2) as total_revenue_at_risk,
+    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) as percentage_of_customers,
+    -- Retention strategy recommendations
+    CASE 
+        WHEN risk_category = 'Critical Risk' THEN 'Immediate personal outreach + discount offer'
+        WHEN risk_category = 'High Risk' THEN 'Targeted email campaign + special promotion'
+        WHEN risk_category = 'Medium Risk' THEN 'Re-engagement campaign + product recommendations'
+        WHEN risk_category = 'Low Risk' THEN 'Gentle reminder + loyalty program'
+        ELSE 'Continue regular marketing'
+    END as recommended_action
+FROM (
+    SELECT 
+        customer_id,
+        CURRENT_DATE - MAX(purchase_date) as days_since_last_purchase,
+        COUNT(*) as total_purchases,
+        SUM(purchase_amount) as total_spent,
+        CASE 
+            WHEN CURRENT_DATE - MAX(purchase_date) >= 90 AND COUNT(*) <= 2 THEN 'Critical Risk'
+            WHEN CURRENT_DATE - MAX(purchase_date) >= 60 THEN 'High Risk'
+            WHEN CURRENT_DATE - MAX(purchase_date) >= 30 THEN 'Medium Risk'
+            WHEN CURRENT_DATE - MAX(purchase_date) >= 14 THEN 'Low Risk'
+            ELSE 'Active Customer'
+        END as risk_category
+    FROM customer_transactions
+    WHERE purchase_amount > 0
+    GROUP BY customer_id
+) risk_analysis
+GROUP BY risk_category
+ORDER BY avg_spent DESC;
+
+-- High-risk customers requiring immediate attention
+SELECT 
+    'HIGH PRIORITY CUSTOMERS' as priority_level,
+    customer_id,
+    risk_category,
+    days_since_last_purchase,
+    total_purchases,
+    total_spent,
+    customer_value,
+    -- Urgency level
+    CASE 
+        WHEN risk_category = 'Critical Risk' AND total_spent >= 500 THEN 'URGENT - High Value'
+        WHEN risk_category = 'Critical Risk' THEN 'URGENT'
+        WHEN risk_category = 'High Risk' AND total_spent >= 300 THEN 'HIGH - Medium Value'
+        ELSE 'HIGH'
+    END as urgency_level
+FROM (
+    SELECT 
+        customer_id,
+        CURRENT_DATE - MAX(purchase_date) as days_since_last_purchase,
+        COUNT(*) as total_purchases,
+        SUM(purchase_amount) as total_spent,
+        CASE 
+            WHEN CURRENT_DATE - MAX(purchase_date) >= 90 AND COUNT(*) <= 2 THEN 'Critical Risk'
+            WHEN CURRENT_DATE - MAX(purchase_date) >= 60 THEN 'High Risk'
+            ELSE 'Lower Risk'
+        END as risk_category,
+        CASE 
+            WHEN SUM(purchase_amount) >= 1000 THEN 'High Value'
+            WHEN SUM(purchase_amount) >= 300 THEN 'Medium Value'
+            WHEN SUM(purchase_amount) >= 100 THEN 'Low Value'
+            ELSE 'Minimal Value'
+        END as customer_value
+    FROM customer_transactions
+    WHERE purchase_amount > 0
+    GROUP BY customer_id
+) high_risk_customers
+WHERE risk_category IN ('Critical Risk', 'High Risk')
+ORDER BY total_spent DESC, days_since_last_purchase DESC
 LIMIT 25;
 
 -- =================================================================
 -- KEY BUSINESS METRICS:
--- 1. Churn Risk Categories: Critical, High, Medium, Low, Very Low
--- 2. Composite Risk Score: Multi-factor churn probability
--- 3. Revenue at Risk: Financial impact of potential churn
--- 4. Retention Strategies: Targeted intervention approaches
--- 5. Behavioral Patterns: Activity consistency and engagement
+-- 1. Churn Risk Score: Behavioral risk assessment (1-8 scale)
+-- 2. Risk Categories: Critical, High, Medium, Low risk classification
+-- 3. Revenue at Risk: Financial impact of potential customer loss
+-- 4. Recommended Actions: Specific retention strategies by risk level
 -- =================================================================

@@ -1,140 +1,87 @@
 -- =================================================================
 -- CUSTOMER ACTIVITY SEGMENTATION ANALYSIS [EASY]
 -- =================================================================
--- Business Question: How can we segment customers by engagement levels?
+-- Business Question: How can we segment customers by their activity levels?
 -- Strategic Value: Enable targeted marketing and personalization strategies
--- Technical Implementation: Behavioral segmentation with engagement scoring
+-- Technical Implementation: Simple customer behavior grouping
 
-WITH customer_engagement AS (
-    -- Calculate customer engagement metrics
-    SELECT 
-        user_pseudo_id as customer_id,
-        COUNT(DISTINCT DATE(TIMESTAMP_MICROS(event_timestamp))) as days_active,
-        COUNT(*) as total_events,
-        COUNT(CASE WHEN event_name = 'page_view' THEN 1 END) as page_views,
-        COUNT(CASE WHEN event_name = 'add_to_cart' THEN 1 END) as cart_adds,
-        COUNT(CASE WHEN event_name = 'purchase' THEN 1 END) as purchases,
-        COUNT(CASE WHEN event_name = 'begin_checkout' THEN 1 END) as checkouts_started,
-        -- Calculate session duration (approximate)
-        COUNT(CASE WHEN event_name = 'session_start' THEN 1 END) as total_sessions
-    FROM `bigquery-public-data.ga4_obfuscated_sample_ecommerce.events_*`
-    WHERE _TABLE_SUFFIX BETWEEN '20201101' AND '20210131'
-    GROUP BY user_pseudo_id
-),
-
-engagement_scores AS (
-    -- Create engagement scoring system
-    SELECT 
-        customer_id,
-        days_active,
-        total_events,
-        page_views,
-        cart_adds,
-        purchases,
-        checkouts_started,
-        total_sessions,
-        -- Weighted engagement score
-        (
-            (days_active * 2) +           -- Days active weight: 2
-            (purchases * 10) +            -- Purchase weight: 10
-            (cart_adds * 3) +             -- Cart adds weight: 3
-            (checkouts_started * 5) +     -- Checkout weight: 5
-            (page_views * 0.5) +          -- Page view weight: 0.5
-            (total_sessions * 1)          -- Session weight: 1
-        ) as engagement_score,
-        -- Calculate averages for comparison
-        CASE 
-            WHEN purchases > 0 THEN page_views / purchases 
-            ELSE page_views 
-        END as pages_per_purchase,
-        CASE 
-            WHEN cart_adds > 0 AND purchases > 0 THEN cart_adds / purchases 
-            ELSE 0 
-        END as cart_to_purchase_ratio
-    FROM customer_engagement
-),
-
-customer_segments AS (
-    -- Define customer segments based on behavior
+-- Customer activity segmentation analysis
+SELECT 
+    customer_id,
+    total_visits,
+    total_purchases,
+    total_spent,
+    -- Simple activity scoring
+    (total_visits * 1) + (total_purchases * 5) + (total_spent * 0.1) as activity_score,
+    -- Customer segmentation based on activity
+    CASE 
+        WHEN total_purchases >= 5 AND total_spent >= 1000 THEN 'VIP Customer'
+        WHEN total_purchases >= 3 AND total_spent >= 500 THEN 'Loyal Customer'
+        WHEN total_purchases >= 1 AND total_spent >= 100 THEN 'Regular Customer'
+        WHEN total_visits >= 5 THEN 'Active Browser'
+        ELSE 'New Visitor'
+    END as customer_segment,
+    -- Value classification
+    CASE 
+        WHEN total_spent >= 1000 THEN 'High Value'
+        WHEN total_spent >= 300 THEN 'Medium Value'
+        WHEN total_spent >= 50 THEN 'Low Value'
+        ELSE 'No Purchase'
+    END as value_tier
+FROM (
+    -- Calculate customer activity metrics
     SELECT 
         customer_id,
-        days_active,
-        total_events,
-        page_views,
-        cart_adds,
-        purchases,
-        total_sessions,
-        engagement_score,
-        pages_per_purchase,
-        cart_to_purchase_ratio,
-        -- Segment customers by engagement level
-        CASE 
-            WHEN engagement_score >= 100 AND purchases >= 3 THEN 'VIP Champions'
-            WHEN engagement_score >= 50 AND purchases >= 2 THEN 'Loyal Customers'
-            WHEN engagement_score >= 25 AND purchases >= 1 THEN 'Active Buyers'
-            WHEN engagement_score >= 10 AND cart_adds > 0 THEN 'Engaged Browsers'
-            WHEN engagement_score >= 5 THEN 'Casual Visitors'
-            ELSE 'New/Low Engagement'
-        END as customer_segment,
-        -- Business value classification
-        CASE 
-            WHEN purchases >= 3 THEN 'High Value'
-            WHEN purchases >= 1 THEN 'Medium Value'
-            WHEN cart_adds > 0 THEN 'Potential Value'
-            ELSE 'Discovery Phase'
-        END as value_classification
-    FROM engagement_scores
-)
+        COUNT(*) as total_visits,
+        SUM(CASE WHEN purchase_amount > 0 THEN 1 ELSE 0 END) as total_purchases,
+        SUM(CASE WHEN purchase_amount > 0 THEN purchase_amount ELSE 0 END) as total_spent
+    FROM customer_activity
+    GROUP BY customer_id
+) customer_metrics
+ORDER BY activity_score DESC;
 
--- EXECUTIVE SUMMARY: Customer Segmentation Analytics
+-- Segment summary for business insights
 SELECT 
     customer_segment,
-    value_classification,
     COUNT(*) as customer_count,
+    ROUND(AVG(total_visits), 1) as avg_visits,
+    ROUND(AVG(total_purchases), 1) as avg_purchases,
+    ROUND(AVG(total_spent), 2) as avg_spent,
     ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) as segment_percentage,
-    -- Key engagement metrics by segment
-    ROUND(AVG(engagement_score), 1) as avg_engagement_score,
-    ROUND(AVG(days_active), 1) as avg_days_active,
-    ROUND(AVG(purchases), 2) as avg_purchases,
-    ROUND(AVG(cart_adds), 1) as avg_cart_adds,
-    ROUND(AVG(total_sessions), 1) as avg_sessions,
-    -- Business intelligence insights
+    -- Marketing strategy recommendation
     CASE 
-        WHEN AVG(purchases) >= 2 THEN 'Retention Focus'
-        WHEN AVG(cart_adds) > AVG(purchases) THEN 'Conversion Focus'
-        WHEN AVG(total_sessions) >= 5 THEN 'Engagement Focus'
-        ELSE 'Activation Focus'
-    END as recommended_strategy
-FROM customer_segments
-GROUP BY customer_segment, value_classification
-ORDER BY avg_engagement_score DESC;
-
--- =================================================================
--- DETAILED SEGMENT BREAKDOWN FOR STRATEGIC PLANNING
--- =================================================================
-SELECT 
-    'SEGMENT SUMMARY' as analysis_type,
-    customer_segment,
-    COUNT(*) as total_customers,
-    SUM(purchases) as total_purchases,
-    ROUND(AVG(engagement_score), 1) as avg_score,
-    -- Strategic recommendations
-    CASE 
-        WHEN customer_segment = 'VIP Champions' THEN 'Loyalty Programs & Exclusive Offers'
-        WHEN customer_segment = 'Loyal Customers' THEN 'Upselling & Cross-selling'
-        WHEN customer_segment = 'Active Buyers' THEN 'Retention Campaigns'
-        WHEN customer_segment = 'Engaged Browsers' THEN 'Conversion Optimization'
-        WHEN customer_segment = 'Casual Visitors' THEN 'Engagement Campaigns'
-        ELSE 'Onboarding & Activation'
+        WHEN customer_segment = 'VIP Customer' THEN 'Premium rewards & exclusive offers'
+        WHEN customer_segment = 'Loyal Customer' THEN 'Loyalty program & upselling'
+        WHEN customer_segment = 'Regular Customer' THEN 'Retention campaigns'
+        WHEN customer_segment = 'Active Browser' THEN 'Conversion optimization'
+        ELSE 'Welcome & onboarding campaigns'
     END as marketing_strategy
-FROM customer_segments
+FROM (
+    SELECT 
+        customer_id,
+        COUNT(*) as total_visits,
+        SUM(CASE WHEN purchase_amount > 0 THEN 1 ELSE 0 END) as total_purchases,
+        SUM(CASE WHEN purchase_amount > 0 THEN purchase_amount ELSE 0 END) as total_spent,
+        CASE 
+            WHEN SUM(CASE WHEN purchase_amount > 0 THEN 1 ELSE 0 END) >= 5 
+                AND SUM(CASE WHEN purchase_amount > 0 THEN purchase_amount ELSE 0 END) >= 1000 THEN 'VIP Customer'
+            WHEN SUM(CASE WHEN purchase_amount > 0 THEN 1 ELSE 0 END) >= 3 
+                AND SUM(CASE WHEN purchase_amount > 0 THEN purchase_amount ELSE 0 END) >= 500 THEN 'Loyal Customer'
+            WHEN SUM(CASE WHEN purchase_amount > 0 THEN 1 ELSE 0 END) >= 1 
+                AND SUM(CASE WHEN purchase_amount > 0 THEN purchase_amount ELSE 0 END) >= 100 THEN 'Regular Customer'
+            WHEN COUNT(*) >= 5 THEN 'Active Browser'
+            ELSE 'New Visitor'
+        END as customer_segment
+    FROM customer_activity
+    GROUP BY customer_id
+) segmentation_data
 GROUP BY customer_segment
-ORDER BY AVG(engagement_score) DESC;
+ORDER BY avg_spent DESC;
 
 -- =================================================================
 -- KEY BUSINESS METRICS:
--- 1. Customer Segments: Behavioral-based customer grouping
--- 2. Engagement Score: Weighted activity measurement
--- 3. Value Classification: Revenue potential assessment
--- 4. Strategic Recommendations: Targeted marketing approaches
+-- 1. Customer Segment: Behavioral-based customer grouping
+-- 2. Activity Score: Simple weighted activity measurement
+-- 3. Value Tier: Revenue-based customer classification
+-- 4. Marketing Strategy: Segment-specific campaign recommendations
 -- =================================================================

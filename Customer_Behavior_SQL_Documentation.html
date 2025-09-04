@@ -122,22 +122,22 @@
 </head>
 <body>
     <div class="container">
-        <h1>🎯 Customer Behavior Analytics Intelligence</h1>
+        <h1>🎯 Customer Behavior Analytics - SQL Intelligence Suite</h1>
         <p class="header-info">
-            <strong>Project:</strong> Customer Behavior Analytics Dashboard<br>
-            <strong>Data Source:</strong> Google Analytics 4 BigQuery Public Dataset<br>
+            <strong>Project:</strong> Customer Behavior Analytics Intelligence Platform<br>
+            <strong>Data Focus:</strong> Customer-Centric Business Intelligence Analytics<br>
             <strong>Created by:</strong> Salomón Santiago Esquivel<br>
-            <strong>Purpose:</strong> Advanced Customer Intelligence Analysis
+            <strong>Purpose:</strong> Advanced Customer Intelligence for Senior Data Analyst Positions
         </p>
 
         <h2>🎯 Executive Project Overview</h2>
         <div class="explanation">
-            <p><strong>Business Objective:</strong> Develop comprehensive customer behavior intelligence platform using real-time Google Analytics 4 data to drive retention optimization, revenue growth, and strategic customer segmentation for senior-level data analyst positions.</p>
+            <p><strong>Business Objective:</strong> Develop comprehensive customer behavior intelligence platform using readable, professional SQL to drive retention optimization, revenue growth, and strategic customer segmentation for senior-level data analyst positions.</p>
             
             <p><strong>Strategic Business Questions:</strong></p>
             <ul>
-                <li>What are our customer retention patterns by acquisition cohort?</li>
-                <li>How can we segment customers by behavioral engagement for targeted marketing?</li>
+                <li>What are our customer retention patterns and lifecycle trends?</li>
+                <li>How can we segment customers by behavioral activity for targeted marketing?</li>
                 <li>Which customers have the highest lifetime value potential for retention investment?</li>
                 <li>Who are our at-risk customers requiring proactive churn intervention?</li>
                 <li>What are the optimal customer journey paths to maximize conversion rates?</li>
@@ -145,510 +145,528 @@
         </div>
 
         <div class="google-highlight">
-            <h3>🚀 Google Analytics 4 Integration:</h3>
+            <h3>✨ Professional SQL Approach:</h3>
             <ul>
-                <li><strong>Data Source:</strong> Real-time GA4 BigQuery Public Dataset (Google Merchandise Store)</li>
-                <li><strong>API Access:</strong> FREE tier with enterprise-grade analytics capabilities</li>
-                <li><strong>Business Credibility:</strong> Google-powered customer intelligence platform</li>
-                <li><strong>Scale:</strong> 10+ million events with comprehensive e-commerce behavior tracking</li>
+                <li><strong>Readable Code:</strong> Clean, maintainable SQL with clear business logic</li>
+                <li><strong>Progressive Complexity:</strong> EASY → MEDIUM → MEDIUM-HARD skill demonstration</li>
+                <li><strong>Business Intelligence Focus:</strong> Strategic insights and actionable recommendations</li>
+                <li><strong>Interview Ready:</strong> Perfect for explaining SQL logic and business thinking</li>
             </ul>
         </div>
 
-        <h2>📋 Google Analytics 4 Data Architecture</h2>
+        <h2>📋 Customer Analytics Data Structure</h2>
         <div class="key-concepts">
-            <h3>BigQuery Event Schema:</h3>
+            <h3>Simplified Customer Data Schema:</h3>
             <ul>
-                <li><strong>events_*:</strong> user_pseudo_id, event_name, event_timestamp, event_params</li>
-                <li><strong>Event Types:</strong> session_start, page_view, view_item, add_to_cart, begin_checkout, purchase</li>
-                <li><strong>Event Parameters:</strong> value (revenue), currency, item details, session data</li>
-                <li><strong>User Journey:</strong> Complete multi-touch attribution and behavioral tracking</li>
+                <li><strong>customer_transactions:</strong> customer_id, purchase_date, purchase_amount</li>
+                <li><strong>customer_activity:</strong> customer_id, visit_date, purchase_amount (0 for non-purchase visits)</li>
+                <li><strong>customer_activity_log:</strong> customer_id, visit_date, purchase_amount</li>
+                <li><strong>Business Focus:</strong> Clean, understandable data structure for customer intelligence</li>
             </ul>
         </div>
 
-        <h2>🔍 Advanced SQL Analytics Documentation</h2>
+        <h2>🔍 Progressive SQL Analytics Documentation</h2>
 
         <!-- QUERY 1 -->
         <div class="query-block">
-            <h3>Query 1: Customer Retention Cohort Analysis <span class="difficulty-easy">EASY</span></h3>
+            <h3>Query 1: Customer Retention Analysis <span class="difficulty-easy">EASY</span></h3>
             
             <div class="business-impact">
-                <strong>Business Question:</strong> What is our customer retention rate by acquisition cohort and how does it trend over time?
+                <strong>Business Question:</strong> What is our customer retention rate by month and how can we classify customer lifecycle patterns?
             </div>
 
-            <div class="sql-code">-- Customer Retention Analysis with Cohort Intelligence
-WITH customer_first_purchase AS (
-    SELECT 
-        user_pseudo_id as customer_id,
-        MIN(DATE(TIMESTAMP_MICROS(event_timestamp))) as first_purchase_date,
-        DATE_TRUNC(MIN(DATE(TIMESTAMP_MICROS(event_timestamp))), MONTH) as cohort_month
-    FROM `bigquery-public-data.ga4_obfuscated_sample_ecommerce.events_*`
-    WHERE event_name = 'purchase'
-    AND _TABLE_SUFFIX BETWEEN '20201101' AND '20210131'
-    GROUP BY user_pseudo_id
-),
-
-retention_data AS (
-    SELECT 
-        cfp.cohort_month,
-        cp.purchase_month,
-        DATE_DIFF(cp.purchase_month, cfp.cohort_month, MONTH) as period_number
-    FROM customer_first_purchase cfp
-    JOIN customer_purchases cp ON cfp.customer_id = cp.customer_id
-)
-
+            <div class="sql-code">-- Customer Retention Analysis using Simple, Readable SQL
 SELECT 
-    cohort_month,
-    period_number,
-    COUNT(DISTINCT customer_id) as customers_retained,
-    ROUND(COUNT(DISTINCT customer_id) * 100.0 / cohort_size, 2) as retention_rate_percent,
+    customer_id,
+    first_purchase_month,
+    last_purchase_month,
+    -- Calculate months between first and last purchase
     CASE 
-        WHEN retention_rate_percent >= 50 THEN 'Excellent Retention'
-        WHEN retention_rate_percent >= 30 THEN 'Good Retention'
-        WHEN retention_rate_percent >= 15 THEN 'Average Retention'
-        ELSE 'Needs Improvement'
-    END as retention_quality
+        WHEN last_purchase_month = first_purchase_month THEN 'New Customer'
+        WHEN last_purchase_month = first_purchase_month + 1 THEN 'Month 1 Return'
+        WHEN last_purchase_month = first_purchase_month + 2 THEN 'Month 2 Return'
+        ELSE 'Long-term Customer'
+    END as retention_category,
+    total_purchases,
+    total_spent
+FROM (
+    -- Get customer purchase summary
+    SELECT 
+        customer_id,
+        MIN(purchase_month) as first_purchase_month,
+        MAX(purchase_month) as last_purchase_month,
+        COUNT(*) as total_purchases,
+        SUM(purchase_amount) as total_spent
+    FROM customer_purchases
+    GROUP BY customer_id
+) customer_summary
+ORDER BY total_spent DESC;
+
+-- Summary retention metrics for business insights
+SELECT 
+    retention_category,
+    COUNT(*) as customer_count,
+    ROUND(AVG(total_purchases), 1) as avg_purchases,
+    ROUND(AVG(total_spent), 2) as avg_spent,
+    ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM customer_purchases), 2) as percentage
 FROM retention_data
-ORDER BY cohort_month, period_number;</div>
+GROUP BY retention_category
+ORDER BY customer_count DESC;</div>
 
             <div class="explanation">
-                <h4>🔍 Advanced Technical Breakdown:</h4>
+                <h4>🔍 Step-by-Step Technical Breakdown:</h4>
                 <ol>
-                    <li><strong>Common Table Expression (CTE):</strong> customer_first_purchase identifies each customer's initial acquisition date</li>
-                    <li><strong>DATE_TRUNC():</strong> Groups customers by acquisition month for cohort analysis</li>
-                    <li><strong>TIMESTAMP_MICROS():</strong> Converts GA4 microsecond timestamps to standard dates</li>
-                    <li><strong>DATE_DIFF():</strong> Calculates retention periods (0 = acquisition month, 1 = first retention month, etc.)</li>
-                    <li><strong>Cohort Logic:</strong> Tracks how many customers from each acquisition cohort return in subsequent months</li>
-                    <li><strong>Business Intelligence:</strong> Retention quality classification for strategic decision-making</li>
-                    <li><strong>Scalable Framework:</strong> Easily adaptable for different retention periods and business models</li>
+                    <li><strong>Subquery Structure:</strong> Inner query calculates customer metrics, outer query applies business logic</li>
+                    <li><strong>MIN/MAX Functions:</strong> Find first and last purchase dates to measure customer lifespan</li>
+                    <li><strong>CASE WHEN Logic:</strong> Creates clear retention categories based on purchase timing</li>
+                    <li><strong>Business Classification:</strong> Segments customers into actionable retention groups</li>
+                    <li><strong>Aggregation:</strong> COUNT(*), SUM(), AVG() for comprehensive customer summaries</li>
+                    <li><strong>Percentage Calculation:</strong> Shows distribution of retention patterns for strategic insights</li>
+                    <li><strong>ORDER BY:</strong> Prioritizes customers by total spending for retention focus</li>
                 </ol>
             </div>
 
             <div class="key-concepts">
-                <strong>SQL Concepts Used:</strong> CTEs (Common Table Expressions), GA4 timestamp functions, DATE_TRUNC, DATE_DIFF, cohort analysis methodology, retention rate calculations
+                <strong>SQL Concepts Demonstrated:</strong> Basic aggregation functions, subqueries, CASE WHEN logic, GROUP BY operations, percentage calculations, business-focused data classification
             </div>
         </div>
 
         <!-- QUERY 2 -->
         <div class="query-block">
-            <h3>Query 2: Behavioral Customer Segmentation <span class="difficulty-easy">EASY</span></h3>
+            <h3>Query 2: Customer Activity Segmentation <span class="difficulty-easy">EASY</span></h3>
             
             <div class="business-impact">
-                <strong>Business Question:</strong> How can we segment customers by engagement behavior for targeted marketing and personalization strategies?
+                <strong>Business Question:</strong> How can we segment customers by their activity levels to enable targeted marketing and personalization strategies?
             </div>
 
-            <div class="sql-code">-- Advanced Customer Behavioral Segmentation
-WITH customer_engagement AS (
-    SELECT 
-        user_pseudo_id as customer_id,
-        COUNT(DISTINCT DATE(TIMESTAMP_MICROS(event_timestamp))) as days_active,
-        COUNT(*) as total_events,
-        COUNT(CASE WHEN event_name = 'page_view' THEN 1 END) as page_views,
-        COUNT(CASE WHEN event_name = 'add_to_cart' THEN 1 END) as cart_adds,
-        COUNT(CASE WHEN event_name = 'purchase' THEN 1 END) as purchases,
-        COUNT(CASE WHEN event_name = 'session_start' THEN 1 END) as total_sessions
-    FROM `bigquery-public-data.ga4_obfuscated_sample_ecommerce.events_*`
-    WHERE _TABLE_SUFFIX BETWEEN '20201101' AND '20210131'
-    GROUP BY user_pseudo_id
-),
-
-engagement_scores AS (
+            <div class="sql-code">-- Customer Activity Segmentation with Simple Scoring Algorithm
+SELECT 
+    customer_id,
+    total_visits,
+    total_purchases,
+    total_spent,
+    -- Simple activity scoring calculation
+    (total_visits * 1) + (total_purchases * 5) + (total_spent * 0.1) as activity_score,
+    -- Customer segmentation based on clear business criteria
+    CASE 
+        WHEN total_purchases >= 5 AND total_spent >= 1000 THEN 'VIP Customer'
+        WHEN total_purchases >= 3 AND total_spent >= 500 THEN 'Loyal Customer'
+        WHEN total_purchases >= 1 AND total_spent >= 100 THEN 'Regular Customer'
+        WHEN total_visits >= 5 THEN 'Active Browser'
+        ELSE 'New Visitor'
+    END as customer_segment,
+    -- Value classification for strategic planning
+    CASE 
+        WHEN total_spent >= 1000 THEN 'High Value'
+        WHEN total_spent >= 300 THEN 'Medium Value'
+        WHEN total_spent >= 50 THEN 'Low Value'
+        ELSE 'No Purchase'
+    END as value_tier
+FROM (
+    -- Calculate customer activity metrics
     SELECT 
         customer_id,
-        -- Weighted engagement scoring algorithm
-        (
-            (days_active * 2) +           -- Activity consistency weight: 2
-            (purchases * 10) +            -- Purchase behavior weight: 10
-            (cart_adds * 3) +             -- Intent behavior weight: 3
-            (page_views * 0.5)            -- Browse behavior weight: 0.5
-        ) as engagement_score,
-        -- Business segment classification
-        CASE 
-            WHEN engagement_score >= 100 AND purchases >= 3 THEN 'VIP Champions'
-            WHEN engagement_score >= 50 AND purchases >= 2 THEN 'Loyal Customers'
-            WHEN engagement_score >= 25 AND purchases >= 1 THEN 'Active Buyers'
-            WHEN engagement_score >= 10 AND cart_adds > 0 THEN 'Engaged Browsers'
-            ELSE 'Casual Visitors'
-        END as customer_segment
-    FROM customer_engagement
-)
+        COUNT(*) as total_visits,
+        SUM(CASE WHEN purchase_amount > 0 THEN 1 ELSE 0 END) as total_purchases,
+        SUM(CASE WHEN purchase_amount > 0 THEN purchase_amount ELSE 0 END) as total_spent
+    FROM customer_activity
+    GROUP BY customer_id
+) customer_metrics
+ORDER BY activity_score DESC;
 
+-- Business insights summary with marketing strategy automation
 SELECT 
     customer_segment,
     COUNT(*) as customer_count,
-    ROUND(AVG(engagement_score), 1) as avg_engagement_score,
-    -- Strategic marketing recommendations
+    ROUND(AVG(total_spent), 2) as avg_spent,
+    -- Automated marketing strategy recommendations
     CASE 
-        WHEN customer_segment = 'VIP Champions' THEN 'Loyalty Programs & Exclusive Offers'
-        WHEN customer_segment = 'Loyal Customers' THEN 'Upselling & Cross-selling'
-        WHEN customer_segment = 'Active Buyers' THEN 'Retention Campaigns'
-        WHEN customer_segment = 'Engaged Browsers' THEN 'Conversion Optimization'
-        ELSE 'Engagement & Activation Campaigns'
+        WHEN customer_segment = 'VIP Customer' THEN 'Premium rewards & exclusive offers'
+        WHEN customer_segment = 'Loyal Customer' THEN 'Loyalty program & upselling'
+        WHEN customer_segment = 'Regular Customer' THEN 'Retention campaigns'
+        WHEN customer_segment = 'Active Browser' THEN 'Conversion optimization'
+        ELSE 'Welcome & onboarding campaigns'
     END as marketing_strategy
-FROM engagement_scores
+FROM segmentation_data
 GROUP BY customer_segment
-ORDER BY avg_engagement_score DESC;</div>
+ORDER BY avg_spent DESC;</div>
 
             <div class="explanation">
-                <h4>🔍 Advanced Technical Breakdown:</h4>
+                <h4>🔍 Step-by-Step Technical Breakdown:</h4>
                 <ol>
-                    <li><strong>Multi-CTE Architecture:</strong> customer_engagement extracts behavioral metrics, engagement_scores applies business logic</li>
-                    <li><strong>Weighted Scoring Algorithm:</strong> Custom engagement score combining multiple behavioral factors</li>
-                    <li><strong>Conditional Aggregation:</strong> COUNT(CASE WHEN...) counts specific event types per customer</li>
-                    <li><strong>Business Segmentation Logic:</strong> Multi-criteria customer classification based on engagement and purchase behavior</li>
-                    <li><strong>Strategic Recommendations:</strong> Automated marketing strategy suggestions per segment</li>
-                    <li><strong>GA4 Event Tracking:</strong> Leverages complete customer journey data from Google Analytics</li>
-                    <li><strong>Scalable Framework:</strong> Easily adjustable weights and thresholds for different business models</li>
+                    <li><strong>Activity Scoring Algorithm:</strong> Simple weighted calculation combining visits, purchases, and spending</li>
+                    <li><strong>Conditional Aggregation:</strong> SUM(CASE WHEN...) to count purchases vs. total visits</li>
+                    <li><strong>Multi-Criteria Segmentation:</strong> CASE WHEN with AND conditions for precise customer classification</li>
+                    <li><strong>Business Logic Implementation:</strong> Clear thresholds based on realistic business criteria</li>
+                    <li><strong>Strategic Automation:</strong> Automated marketing recommendations based on customer segments</li>
+                    <li><strong>Performance Optimization:</strong> Single-pass data processing with efficient aggregation</li>
+                    <li><strong>Executive Readiness:</strong> Results structured for immediate business action</li>
                 </ol>
             </div>
 
             <div class="key-concepts">
-                <strong>SQL Concepts Used:</strong> Multi-CTE queries, conditional aggregation, weighted scoring algorithms, business segmentation logic, strategic recommendation automation
+                <strong>SQL Concepts Demonstrated:</strong> Conditional aggregation, weighted scoring calculations, multi-criteria CASE statements, strategic business logic automation, performance-focused query design
             </div>
         </div>
 
         <!-- QUERY 3 -->
         <div class="query-block">
-            <h3>Query 3: Customer Lifetime Value Intelligence <span class="difficulty-medium">MEDIUM</span></h3>
+            <h3>Query 3: Customer Lifetime Value Ranking <span class="difficulty-medium">MEDIUM</span></h3>
             
             <div class="business-impact">
                 <strong>Business Question:</strong> Which customers have the highest lifetime value potential and should be prioritized for retention investment?
             </div>
 
-            <div class="sql-code">-- Advanced Customer Lifetime Value Ranking System
-WITH customer_ltv_calculation AS (
-    SELECT 
-        cpd.customer_id,
-        COUNT(cpd.purchase_date) as total_purchases,
-        SUM(cpd.purchase_value) as total_revenue,
-        AVG(cpd.purchase_value) as avg_order_value,
-        -- Annualized LTV projection
-        CASE 
-            WHEN cbm.customer_lifespan_days > 0 
-            THEN SUM(cpd.purchase_value) / cbm.customer_lifespan_days * 365
-            ELSE SUM(cpd.purchase_value)
-        END as annualized_ltv,
-        -- Behavioral engagement metrics
-        cbm.total_events / cbm.days_active as daily_engagement_intensity
-    FROM customer_purchase_data cpd
-    JOIN customer_behavior_metrics cbm ON cpd.customer_id = cbm.customer_id
-    GROUP BY cpd.customer_id, cbm.customer_lifespan_days, cbm.total_events, cbm.days_active
-),
-
-ltv_ranking_with_segments AS (
-    SELECT 
-        customer_id,
-        total_revenue,
-        annualized_ltv,
-        -- Advanced ranking methodologies
-        ROW_NUMBER() OVER (ORDER BY total_revenue DESC) as revenue_rank,
-        ROW_NUMBER() OVER (ORDER BY annualized_ltv DESC) as ltv_rank,
-        PERCENT_RANK() OVER (ORDER BY total_revenue) as revenue_percentile,
-        -- Composite LTV scoring (multi-factor)
-        (
-            (PERCENT_RANK() OVER (ORDER BY total_revenue) * 0.4) +
-            (PERCENT_RANK() OVER (ORDER BY total_purchases) * 0.3) +
-            (PERCENT_RANK() OVER (ORDER BY avg_order_value) * 0.2) +
-            (PERCENT_RANK() OVER (ORDER BY daily_engagement_intensity) * 0.1)
-        ) * 100 as composite_ltv_score
-    FROM customer_ltv_calculation
-)
-
+            <div class="sql-code">-- Customer Lifetime Value Analysis with Advanced Ranking
 SELECT 
     customer_id,
-    total_revenue,
-    annualized_ltv,
-    composite_ltv_score,
+    first_purchase_date,
+    last_purchase_date,
+    days_as_customer,
+    total_purchases,
+    total_spent,
+    avg_order_value,
+    -- Calculate comprehensive lifetime value score
+    ROUND(total_spent + (total_purchases * 10) + (days_as_customer * 0.5), 2) as ltv_score,
+    -- Multiple ranking methodologies
+    RANK() OVER (ORDER BY total_spent DESC) as spending_rank,
+    RANK() OVER (ORDER BY total_purchases DESC) as frequency_rank,
+    RANK() OVER (ORDER BY avg_order_value DESC) as avg_order_rank,
     -- Strategic customer tier classification
     CASE 
-        WHEN composite_ltv_score >= 90 THEN 'Platinum VIP'
-        WHEN composite_ltv_score >= 75 THEN 'Gold Champions'
-        WHEN composite_ltv_score >= 50 THEN 'Silver Loyalists'
-        WHEN composite_ltv_score >= 25 THEN 'Bronze Customers'
-        ELSE 'Developing Customers'
-    END as ltv_segment,
-    -- Strategic retention investment recommendations
+        WHEN total_spent >= 2000 AND total_purchases >= 5 THEN 'Platinum'
+        WHEN total_spent >= 1000 AND total_purchases >= 3 THEN 'Gold'
+        WHEN total_spent >= 500 AND total_purchases >= 2 THEN 'Silver'
+        WHEN total_spent >= 100 THEN 'Bronze'
+        ELSE 'Basic'
+    END as customer_tier
+FROM (
+    -- Calculate customer metrics with date arithmetic
+    SELECT 
+        customer_id,
+        MIN(purchase_date) as first_purchase_date,
+        MAX(purchase_date) as last_purchase_date,
+        MAX(purchase_date) - MIN(purchase_date) as days_as_customer,
+        COUNT(*) as total_purchases,
+        SUM(purchase_amount) as total_spent,
+        ROUND(AVG(purchase_amount), 2) as avg_order_value
+    FROM customer_transactions
+    WHERE purchase_amount > 0
+    GROUP BY customer_id
+) customer_ltv_data
+ORDER BY ltv_score DESC;
+
+-- Strategic tier analysis with retention recommendations
+SELECT 
+    customer_tier,
+    COUNT(*) as customer_count,
+    ROUND(AVG(total_spent), 2) as avg_total_spent,
+    ROUND(SUM(total_spent), 2) as tier_total_revenue,
+    -- Automated strategic recommendations by tier
     CASE 
-        WHEN composite_ltv_score >= 90 THEN 'White-glove service, exclusive access'
-        WHEN composite_ltv_score >= 75 THEN 'Premium support, early access'
-        WHEN composite_ltv_score >= 50 THEN 'Loyalty programs, cross-selling'
-        ELSE 'Engagement and activation focus'
+        WHEN customer_tier = 'Platinum' THEN 'VIP treatment, exclusive access, personal account manager'
+        WHEN customer_tier = 'Gold' THEN 'Premium support, early access to products'
+        WHEN customer_tier = 'Silver' THEN 'Loyalty program, targeted offers'
+        WHEN customer_tier = 'Bronze' THEN 'Upselling campaigns, bundle offers'
+        ELSE 'Basic retention, welcome series'
     END as retention_strategy
-FROM ltv_ranking_with_segments
-ORDER BY composite_ltv_score DESC;</div>
+FROM tier_analysis
+GROUP BY customer_tier
+ORDER BY avg_total_spent DESC;</div>
 
             <div class="explanation">
-                <h4>🔍 Advanced Technical Breakdown:</h4>
+                <h4>🔍 Step-by-Step Technical Breakdown:</h4>
                 <ol>
-                    <li><strong>Complex CTE Architecture:</strong> Multi-step customer value calculation with behavioral integration</li>
-                    <li><strong>Annualized LTV Projection:</strong> Revenue forecasting based on customer lifespan and purchasing patterns</li>
-                    <li><strong>Advanced Window Functions:</strong> ROW_NUMBER() and PERCENT_RANK() for comprehensive customer ranking</li>
-                    <li><strong>Composite Scoring Algorithm:</strong> Weighted multi-factor customer value assessment</li>
-                    <li><strong>Strategic Tier Classification:</strong> Business-ready customer segment hierarchy (Platinum to Bronze)</li>
-                    <li><strong>Automated Strategy Recommendations:</strong> Investment guidance based on customer value tiers</li>
-                    <li><strong>Revenue Intelligence:</strong> Combines transaction data with behavioral engagement metrics</li>
+                    <li><strong>Window Functions:</strong> RANK() OVER (ORDER BY...) creates multiple customer rankings</li>
+                    <li><strong>Date Arithmetic:</strong> MAX(date) - MIN(date) calculates customer relationship duration</li>
+                    <li><strong>Composite Scoring:</strong> LTV score combines spending, frequency, and relationship length</li>
+                    <li><strong>Multi-Criteria Classification:</strong> Customer tiers based on both spending AND purchase frequency</li>
+                    <li><strong>Strategic Automation:</strong> Automated retention strategies based on customer value</li>
+                    <li><strong>Business Intelligence:</strong> Revenue impact analysis by customer tier</li>
+                    <li><strong>Executive Insights:</strong> Clear prioritization for retention investment allocation</li>
                 </ol>
             </div>
 
             <div class="key-concepts">
-                <strong>SQL Concepts Used:</strong> Complex CTEs, window functions (ROW_NUMBER, PERCENT_RANK), composite scoring algorithms, multi-factor customer valuation, strategic automation logic
+                <strong>SQL Concepts Demonstrated:</strong> Window functions (RANK), date arithmetic, composite scoring algorithms, multi-criteria business classification, strategic automation, revenue impact analysis
             </div>
         </div>
 
         <!-- QUERY 4 -->
         <div class="query-block">
-            <h3>Query 4: Predictive Churn Risk Analysis <span class="difficulty-medium">MEDIUM</span></h3>
+            <h3>Query 4: Churn Risk Prediction Analysis <span class="difficulty-medium">MEDIUM</span></h3>
             
             <div class="business-impact">
                 <strong>Business Question:</strong> Which customers are at highest risk of churning and require proactive retention intervention?
             </div>
 
-            <div class="sql-code">-- Advanced Churn Risk Prediction System
-WITH churn_risk_scoring AS (
-    SELECT 
-        customer_id,
-        days_since_last_activity,
-        days_since_last_purchase,
-        total_purchases,
-        total_purchase_value,
-        -- Multi-dimensional risk scoring
-        CASE 
-            WHEN days_since_last_activity <= 7 THEN 1
-            WHEN days_since_last_activity <= 30 THEN 3
-            WHEN days_since_last_activity <= 60 THEN 4
-            WHEN days_since_last_activity <= 90 THEN 5
-            ELSE 6
-        END as recency_risk_score,
-        
-        CASE 
-            WHEN days_since_last_purchase IS NULL THEN 6  -- Never purchased
-            WHEN days_since_last_purchase <= 30 THEN 2
-            WHEN days_since_last_purchase <= 60 THEN 3
-            WHEN days_since_last_purchase <= 90 THEN 4
-            ELSE 6
-        END as purchase_recency_risk,
-        
-        CASE 
-            WHEN total_purchases >= 5 THEN 1
-            WHEN total_purchases >= 2 THEN 3
-            WHEN total_purchases >= 1 THEN 4
-            ELSE 6  -- No purchases = highest risk
-        END as purchase_frequency_risk
-    FROM customer_behavioral_patterns
-),
-
-final_churn_risk_assessment AS (
-    SELECT 
-        customer_id,
-        total_purchase_value,
-        -- Composite churn risk calculation (weighted)
-        ROUND(
-            (recency_risk_score * 0.3) +           -- 30% weight on general activity
-            (purchase_recency_risk * 0.35) +       -- 35% weight on purchase recency
-            (purchase_frequency_risk * 0.25) +     -- 25% weight on purchase frequency
-            (engagement_risk_score * 0.1),         -- 10% weight on engagement
-            2
-        ) as composite_churn_risk_score,
-        
-        -- Strategic risk category classification
-        CASE 
-            WHEN composite_churn_risk_score >= 5.0 THEN 'Critical Risk'
-            WHEN composite_churn_risk_score >= 4.0 THEN 'High Risk'
-            WHEN composite_churn_risk_score >= 3.0 THEN 'Medium Risk'
-            WHEN composite_churn_risk_score >= 2.0 THEN 'Low Risk'
-            ELSE 'Very Low Risk'
-        END as churn_risk_category,
-        
-        -- Automated intervention recommendations
-        CASE 
-            WHEN composite_churn_risk_score >= 5.0 THEN 'Immediate intervention: Personal outreach, special offers'
-            WHEN composite_churn_risk_score >= 4.0 THEN 'Urgent: Targeted email campaign, discount offers'
-            WHEN composite_churn_risk_score >= 3.0 THEN 'Monitor: Re-engagement campaigns, content marketing'
-            ELSE 'Maintain: Continue regular marketing, loyalty programs'
-        END as retention_recommendation
-    FROM churn_risk_scoring
-)
-
+            <div class="sql-code">-- Customer Churn Risk Analysis with Predictive Scoring
 SELECT 
-    churn_risk_category,
+    customer_id,
+    last_purchase_date,
+    days_since_last_purchase,
+    total_purchases,
+    total_spent,
+    avg_order_value,
+    -- Multi-factor churn risk scoring algorithm
+    CASE 
+        WHEN days_since_last_purchase >= 90 THEN 5
+        WHEN days_since_last_purchase >= 60 THEN 4
+        WHEN days_since_last_purchase >= 30 THEN 3
+        WHEN days_since_last_purchase >= 14 THEN 2
+        ELSE 1
+    END +
+    CASE 
+        WHEN total_purchases = 1 THEN 3  -- One-time buyers highest risk
+        WHEN total_purchases = 2 THEN 2
+        WHEN total_purchases <= 5 THEN 1
+        ELSE 0  -- Frequent buyers lowest additional risk
+    END as churn_risk_score,
+    -- Strategic risk category classification
+    CASE 
+        WHEN days_since_last_purchase >= 90 AND total_purchases <= 2 THEN 'Critical Risk'
+        WHEN days_since_last_purchase >= 60 THEN 'High Risk'
+        WHEN days_since_last_purchase >= 30 THEN 'Medium Risk'
+        WHEN days_since_last_purchase >= 14 THEN 'Low Risk'
+        ELSE 'Active Customer'
+    END as risk_category,
+    -- Customer value assessment for prioritization
+    CASE 
+        WHEN total_spent >= 1000 THEN 'High Value'
+        WHEN total_spent >= 300 THEN 'Medium Value'
+        WHEN total_spent >= 100 THEN 'Low Value'
+        ELSE 'Minimal Value'
+    END as customer_value
+FROM (
+    -- Calculate customer behavior metrics with current date comparison
+    SELECT 
+        customer_id,
+        MAX(purchase_date) as last_purchase_date,
+        CURRENT_DATE - MAX(purchase_date) as days_since_last_purchase,
+        COUNT(*) as total_purchases,
+        SUM(purchase_amount) as total_spent,
+        ROUND(AVG(purchase_amount), 2) as avg_order_value
+    FROM customer_transactions
+    WHERE purchase_amount > 0
+    GROUP BY customer_id
+) customer_behavior
+ORDER BY churn_risk_score DESC, total_spent DESC;
+
+-- Risk summary with automated intervention strategies
+SELECT 
+    risk_category,
     COUNT(*) as customer_count,
-    ROUND(AVG(composite_churn_risk_score), 2) as avg_risk_score,
-    ROUND(SUM(COALESCE(total_purchase_value, 0)), 2) as total_revenue_at_risk,
-    retention_recommendation as recommended_action
-FROM final_churn_risk_assessment
-GROUP BY churn_risk_category, retention_recommendation
-ORDER BY avg_risk_score DESC;</div>
+    ROUND(SUM(total_spent), 2) as total_revenue_at_risk,
+    ROUND(AVG(days_since_last_purchase), 0) as avg_days_inactive,
+    -- Automated retention strategy recommendations
+    CASE 
+        WHEN risk_category = 'Critical Risk' THEN 'Immediate personal outreach + discount offer'
+        WHEN risk_category = 'High Risk' THEN 'Targeted email campaign + special promotion'
+        WHEN risk_category = 'Medium Risk' THEN 'Re-engagement campaign + product recommendations'
+        WHEN risk_category = 'Low Risk' THEN 'Gentle reminder + loyalty program'
+        ELSE 'Continue regular marketing'
+    END as recommended_action
+FROM risk_analysis
+GROUP BY risk_category
+ORDER BY total_revenue_at_risk DESC;</div>
 
             <div class="explanation">
-                <h4>🔍 Advanced Technical Breakdown:</h4>
+                <h4>🔍 Step-by-Step Technical Breakdown:</h4>
                 <ol>
-                    <li><strong>Multi-Factor Risk Assessment:</strong> Combines recency, frequency, and monetary behavioral patterns</li>
-                    <li><strong>Weighted Risk Algorithm:</strong> Custom scoring system prioritizing purchase behavior over general activity</li>
-                    <li><strong>Predictive Logic:</strong> NULL handling for customers who never purchased (highest risk)</li>
-                    <li><strong>Revenue Impact Analysis:</strong> Calculates total revenue at risk by churn category</li>
-                    <li><strong>Automated Intervention System:</strong> Strategic recommendations based on risk level</li>
-                    <li><strong>Business Intelligence:</strong> Executive-ready churn prevention strategies</li>
-                    <li><strong>Scalable Framework:</strong> Adjustable risk weights and thresholds for different business models</li>
+                    <li><strong>Date Calculations:</strong> CURRENT_DATE - MAX(purchase_date) for recency analysis</li>
+                    <li><strong>Multi-Factor Scoring:</strong> Additive risk score combining recency and frequency factors</li>
+                    <li><strong>Predictive Logic:</strong> One-time buyers flagged as highest churn risk</li>
+                    <li><strong>Risk Categorization:</strong> Clear business categories for intervention prioritization</li>
+                    <li><strong>Revenue Impact:</strong> SUM(total_spent) shows financial impact of potential churn</li>
+                    <li><strong>Strategic Automation:</strong> Automated intervention recommendations by risk level</li>
+                    <li><strong>Business Priority:</strong> Dual sorting by risk score and customer value</li>
                 </ol>
             </div>
 
             <div class="key-concepts">
-                <strong>SQL Concepts Used:</strong> Multi-factor risk modeling, weighted scoring algorithms, NULL handling strategies, revenue impact calculations, automated recommendation systems
+                <strong>SQL Concepts Demonstrated:</strong> Date arithmetic with CURRENT_DATE, multi-factor scoring algorithms, predictive risk modeling, revenue impact calculations, strategic intervention automation
             </div>
         </div>
 
         <!-- QUERY 5 -->
         <div class="query-block">
-            <h3>Query 5: Advanced Customer Journey Analytics <span class="difficulty-hard">MEDIUM-HARD</span></h3>
+            <h3>Query 5: Customer Journey Analytics <span class="difficulty-hard">MEDIUM-HARD</span></h3>
             
             <div class="business-impact">
-                <strong>Business Question:</strong> What are the optimal customer journey paths to conversion and how can we optimize marketing touchpoint performance?
+                <strong>Business Question:</strong> How do customers progress through our sales funnel and what are the optimal conversion paths?
             </div>
 
-            <div class="sql-code">-- Advanced Customer Journey Multi-Touch Attribution
-WITH customer_events_sequenced AS (
-    SELECT 
-        user_pseudo_id as customer_id,
-        event_name,
-        TIMESTAMP_MICROS(event_timestamp) as event_timestamp,
-        -- Advanced event sequencing
-        LAG(event_name) OVER (
-            PARTITION BY user_pseudo_id 
-            ORDER BY TIMESTAMP_MICROS(event_timestamp)
-        ) as previous_event,
-        ROW_NUMBER() OVER (
-            PARTITION BY user_pseudo_id 
-            ORDER BY TIMESTAMP_MICROS(event_timestamp)
-        ) as event_sequence_number,
-        -- Session identification logic (30-minute timeout)
-        SUM(CASE 
-            WHEN TIMESTAMP_DIFF(
-                TIMESTAMP_MICROS(event_timestamp),
-                LAG(TIMESTAMP_MICROS(event_timestamp)) OVER (
-                    PARTITION BY user_pseudo_id 
-                    ORDER BY TIMESTAMP_MICROS(event_timestamp)
-                ),
-                MINUTE
-            ) > 30 THEN 1 ELSE 0 
-        END) OVER (
-            PARTITION BY user_pseudo_id 
-            ORDER BY TIMESTAMP_MICROS(event_timestamp) 
-            ROWS UNBOUNDED PRECEDING
-        ) as session_number
-    FROM `bigquery-public-data.ga4_obfuscated_sample_ecommerce.events_*`
-    WHERE _TABLE_SUFFIX BETWEEN '20201101' AND '20210131'
-),
-
-conversion_path_analysis AS (
-    SELECT 
-        cjp.customer_id,
-        COUNT(cjp.session_number) as total_sessions,
-        SUM(cjp.session_converted) as total_conversions,
-        -- Advanced funnel conversion metrics
-        CASE 
-            WHEN COUNT(cjp.first_item_view) > 0 
-            THEN ROUND(COUNT(cjp.first_cart_add) * 100.0 / COUNT(cjp.first_item_view), 2)
-            ELSE 0 
-        END as item_view_to_cart_rate,
-        
-        CASE 
-            WHEN COUNT(cjp.first_cart_add) > 0 
-            THEN ROUND(COUNT(cjp.first_purchase) * 100.0 / COUNT(cjp.first_cart_add), 2)
-            ELSE 0 
-        END as cart_to_purchase_rate,
-        
-        -- Customer journey classification
-        CASE 
-            WHEN SUM(cjp.total_conversions) >= 3 THEN 'High-Value Multi-Purchaser'
-            WHEN SUM(cjp.total_conversions) >= 2 THEN 'Repeat Customer' 
-            WHEN SUM(cjp.total_conversions) = 1 THEN 'Single Purchaser'
-            WHEN COUNT(cjp.first_cart_add) > 0 THEN 'Cart Abandoner'
-            ELSE 'Browser Only'
-        END as customer_journey_segment
-    FROM customer_journey_paths cjp
-    GROUP BY cjp.customer_id
-)
-
+            <div class="sql-code">-- Advanced Customer Journey Analysis with Conversion Funnel
 SELECT 
-    customer_journey_segment,
-    COUNT(*) as customer_count,
-    ROUND(AVG(total_sessions), 1) as avg_sessions,
-    ROUND(AVG(item_view_to_cart_rate), 2) as avg_browse_to_consideration_rate,
-    ROUND(AVG(cart_to_purchase_rate), 2) as avg_consideration_to_conversion_rate,
-    -- Strategic optimization recommendations
+    customer_id,
+    first_visit_date,
+    first_purchase_date,
+    total_visits,
+    total_purchases,
+    conversion_rate,
+    avg_days_to_purchase,
+    -- Advanced journey classification based on behavior patterns
     CASE 
-        WHEN AVG(cart_to_purchase_rate) < 50 THEN 'Focus: Checkout optimization'
-        WHEN AVG(item_view_to_cart_rate) < 20 THEN 'Focus: Product page conversion'
-        ELSE 'Focus: Acquisition and awareness'
-    END as optimization_priority
-FROM conversion_path_analysis
-GROUP BY customer_journey_segment
-ORDER BY avg_sessions DESC;</div>
+        WHEN total_purchases >= 5 THEN 'Repeat Buyer'
+        WHEN total_purchases >= 2 THEN 'Multi-Purchase'
+        WHEN total_purchases = 1 AND total_visits <= 3 THEN 'Quick Converter'
+        WHEN total_purchases = 1 AND total_visits > 3 THEN 'Slow Converter'
+        WHEN total_visits >= 5 THEN 'Browser'
+        ELSE 'One-Time Visitor'
+    END as journey_type,
+    -- Conversion efficiency assessment
+    CASE 
+        WHEN conversion_rate >= 50 THEN 'Highly Efficient'
+        WHEN conversion_rate >= 25 THEN 'Efficient'
+        WHEN conversion_rate >= 10 THEN 'Average'
+        ELSE 'Inefficient'
+    END as conversion_efficiency
+FROM (
+    -- Advanced journey metrics with window function calculations
+    SELECT 
+        customer_id,
+        MIN(visit_date) as first_visit_date,
+        MIN(CASE WHEN purchase_amount > 0 THEN visit_date END) as first_purchase_date,
+        COUNT(*) as total_visits,
+        SUM(CASE WHEN purchase_amount > 0 THEN 1 ELSE 0 END) as total_purchases,
+        ROUND(
+            SUM(CASE WHEN purchase_amount > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2
+        ) as conversion_rate,
+        -- Advanced window function for time-to-purchase calculation
+        ROUND(
+            AVG(CASE WHEN purchase_amount > 0 THEN 
+                visit_date - MIN(visit_date) OVER (PARTITION BY customer_id) 
+            END), 1
+        ) as avg_days_to_purchase
+    FROM customer_activity_log
+    GROUP BY customer_id
+) journey_metrics
+ORDER BY total_purchases DESC, conversion_rate DESC;
+
+-- Conversion funnel analysis with advanced window functions
+SELECT 
+    funnel_stage,
+    customer_count,
+    -- LAG function for step-by-step conversion rates
+    ROUND(customer_count * 100.0 / LAG(customer_count) OVER (ORDER BY stage_order), 2) as conversion_rate,
+    -- FIRST_VALUE for overall funnel performance
+    ROUND(customer_count * 100.0 / FIRST_VALUE(customer_count) OVER (ORDER BY stage_order), 2) as overall_rate
+FROM (
+    -- Complex UNION ALL structure for funnel stage analysis
+    SELECT 1 as stage_order, 'Total Visitors' as funnel_stage,
+           COUNT(DISTINCT customer_id) as customer_count
+    FROM customer_activity_log
+    UNION ALL
+    SELECT 2, 'Engaged Visitors (2+ visits)', COUNT(DISTINCT customer_id)
+    FROM customer_activity_log
+    GROUP BY customer_id HAVING COUNT(*) >= 2
+    UNION ALL
+    SELECT 3, 'Active Browsers (5+ visits)', COUNT(DISTINCT customer_id)
+    FROM customer_activity_log
+    GROUP BY customer_id HAVING COUNT(*) >= 5
+    UNION ALL
+    SELECT 4, 'First-Time Buyers', COUNT(DISTINCT customer_id)
+    FROM customer_activity_log
+    WHERE purchase_amount > 0
+    UNION ALL
+    SELECT 5, 'Repeat Buyers (2+ purchases)', COUNT(DISTINCT customer_id)
+    FROM customer_activity_log
+    WHERE purchase_amount > 0
+    GROUP BY customer_id HAVING COUNT(*) >= 2
+) funnel_data
+ORDER BY stage_order;
+
+-- Journey optimization insights with strategic recommendations
+SELECT 
+    journey_type,
+    COUNT(*) as customer_count,
+    ROUND(AVG(conversion_rate), 2) as avg_conversion_rate,
+    -- Strategic optimization recommendations by journey type
+    CASE 
+        WHEN journey_type = 'Browser' THEN 'Focus on conversion tactics - product demos, trials, urgency'
+        WHEN journey_type = 'Slow Converter' THEN 'Streamline purchase process, reduce friction'
+        WHEN journey_type = 'Quick Converter' THEN 'Expand reach - this is ideal customer behavior'
+        WHEN journey_type = 'Multi-Purchase' THEN 'Upsell and cross-sell opportunities'
+        WHEN journey_type = 'Repeat Buyer' THEN 'Loyalty programs and VIP treatment'
+        ELSE 'Improve initial engagement and site experience'
+    END as optimization_strategy
+FROM journey_analysis
+GROUP BY journey_type
+ORDER BY avg_conversion_rate DESC;</div>
 
             <div class="explanation">
-                <h4>🔍 Advanced Technical Breakdown:</h4>
+                <h4>🔍 Step-by-Step Technical Breakdown:</h4>
                 <ol>
-                    <li><strong>Event Sequencing Architecture:</strong> Complete customer journey tracking with LAG() window functions</li>
-                    <li><strong>Session Logic Implementation:</strong> 30-minute timeout rule with complex windowing for session identification</li>
-                    <li><strong>Multi-Touch Attribution:</strong> Tracks customer interactions across multiple sessions and touchpoints</li>
-                    <li><strong>Conversion Funnel Analytics:</strong> Calculates stage-by-stage conversion rates (browse → consider → convert)</li>
-                    <li><strong>Journey Segmentation:</strong> Behavioral classification from browsers to high-value multi-purchasers</li>
-                    <li><strong>Optimization Intelligence:</strong> Automated recommendations based on funnel performance bottlenecks</li>
-                    <li><strong>Advanced GA4 Integration:</strong> Leverages complete event stream for comprehensive customer intelligence</li>
+                    <li><strong>Advanced Window Functions:</strong> MIN() OVER (PARTITION BY...) for customer-specific calculations</li>
+                    <li><strong>Complex Journey Classification:</strong> Multi-criteria CASE statements for behavioral segmentation</li>
+                    <li><strong>LAG() Function:</strong> Calculates step-by-step funnel conversion rates</li>
+                    <li><strong>FIRST_VALUE() Window Function:</strong> Overall funnel performance against baseline</li>
+                    <li><strong>UNION ALL Structure:</strong> Complex funnel stage analysis combining multiple aggregations</li>
+                    <li><strong>HAVING Clause:</strong> Filters aggregated groups for multi-visit and multi-purchase analysis</li>
+                    <li><strong>Strategic Optimization:</strong> Automated recommendations based on journey performance patterns</li>
                 </ol>
             </div>
 
             <div class="key-concepts">
-                <strong>SQL Concepts Used:</strong> Advanced window functions (LAG, ROW_NUMBER), session identification logic, multi-touch attribution modeling, funnel conversion analytics, journey optimization intelligence
+                <strong>SQL Concepts Demonstrated:</strong> Advanced window functions (LAG, FIRST_VALUE, MIN OVER PARTITION), complex UNION ALL structures, HAVING clause with aggregations, multi-criteria journey optimization, funnel analysis methodology
             </div>
         </div>
 
         <h2>📊 Professional Dashboard Intelligence</h2>
         
         <div class="explanation">
-            <h3>Google Analytics 4 Powered Visualization Suite</h3>
-            <p>Advanced Python-based dashboard system generating executive-ready customer behavior intelligence:</p>
+            <h3>Customer Behavior Analytics Visualization Suite</h3>
+            <p>Professional Python-based dashboard system generating executive-ready customer intelligence:</p>
             
             <h4>🔍 Dashboard 1: Customer Retention Intelligence</h4>
             <ul>
-                <li><strong>Cohort Retention Analysis:</strong> Month-over-month retention curves showing customer lifecycle patterns</li>
-                <li><strong>Retention Quality Metrics:</strong> Performance classification (Excellent/Good/Average/Needs Improvement)</li>
-                <li><strong>Strategic Insights:</strong> Identifies optimal retention periods for investment focus</li>
-                <li><strong>Executive Readiness:</strong> Clear retention trends for senior leadership decision-making</li>
+                <li><strong>Retention Category Analysis:</strong> New Customer, Month 1/2 Return, Long-term Customer patterns</li>
+                <li><strong>Lifecycle Metrics:</strong> Average purchases and spending by retention stage</li>
+                <li><strong>Strategic Insights:</strong> Percentage distribution for targeted retention campaigns</li>
+                <li><strong>Executive Readiness:</strong> Clear retention trends for strategic decision-making</li>
             </ul>
             
-            <h4>👥 Dashboard 2: Behavioral Segmentation Intelligence</h4>
+            <h4>👥 Dashboard 2: Customer Segmentation Intelligence</h4>
             <ul>
-                <li><strong>Customer Segment Distribution:</strong> VIP Champions (8%), Loyal Customers (15%), Active Buyers (22%)</li>
-                <li><strong>Engagement Scoring:</strong> Weighted behavioral metrics with strategic segment placement</li>
+                <li><strong>Activity-Based Segments:</strong> VIP Customer, Loyal Customer, Regular Customer, Active Browser, New Visitor</li>
+                <li><strong>Value Tier Classification:</strong> High Value, Medium Value, Low Value, No Purchase</li>
                 <li><strong>Marketing Strategy Automation:</strong> Segment-specific campaign recommendations</li>
-                <li><strong>Revenue Impact:</strong> Shows customer value by behavioral engagement level</li>
+                <li><strong>Activity Scoring:</strong> Weighted behavioral metrics for prioritization</li>
             </ul>
             
             <h4>💰 Dashboard 3: Lifetime Value Intelligence</h4>
             <ul>
-                <li><strong>Customer Tier Visualization:</strong> Platinum, Gold, Silver, Bronze customer hierarchies</li>
-                <li><strong>LTV Distribution Analysis:</strong> Revenue concentration and customer value patterns</li>
-                <li><strong>Investment Prioritization:</strong> Clear guidance for retention budget allocation</li>
-                <li><strong>Strategic Customer Rankings:</strong> Top 20 customers with revenue impact metrics</li>
+                <li><strong>Customer Tier System:</strong> Platinum, Gold, Silver, Bronze customer hierarchies</li>
+                <li><strong>Multi-Ranking System:</strong> Spending rank, frequency rank, average order rank</li>
+                <li><strong>LTV Score Calculation:</strong> Composite value assessment for retention investment</li>
+                <li><strong>Strategic Retention:</strong> Automated strategies by customer tier</li>
             </ul>
             
             <h4>📈 Dashboard 4: Churn Risk Intelligence</h4>
             <ul>
-                <li><strong>Risk Category Visualization:</strong> Critical (3.6%), High (6.4%), Medium (17%), Low (24%), Very Low (49%)</li>
-                <li><strong>Revenue at Risk:</strong> Financial impact analysis by churn probability</li>
-                <li><strong>Intervention Recommendations:</strong> Automated retention strategy guidance</li>
-                <li><strong>Proactive Intelligence:</strong> Early warning system for customer retention</li>
+                <li><strong>Risk Categories:</strong> Critical Risk, High Risk, Medium Risk, Low Risk, Active Customer</li>
+                <li><strong>Predictive Scoring:</strong> Multi-factor churn risk assessment</li>
+                <li><strong>Revenue at Risk:</strong> Financial impact analysis for retention prioritization</li>
+                <li><strong>Intervention Strategies:</strong> Automated retention recommendations by risk level</li>
+            </ul>
+            
+            <h4>🛣️ Dashboard 5: Journey Optimization Intelligence</h4>
+            <ul>
+                <li><strong>Journey Types:</strong> Repeat Buyer, Multi-Purchase, Quick/Slow Converter, Browser, One-Time Visitor</li>
+                <li><strong>Conversion Funnel:</strong> Step-by-step visitor to repeat buyer progression</li>
+                <li><strong>Efficiency Metrics:</strong> Conversion rates and days to purchase analysis</li>
+                <li><strong>Optimization Strategies:</strong> Targeted improvement recommendations by journey pattern</li>
             </ul>
         </div>
 
         <div class="key-concepts">
-            <h3>Advanced Analytics Capabilities Demonstrated:</h3>
+            <h3>Advanced SQL Capabilities Demonstrated:</h3>
             <ul>
-                <li><strong>Google Analytics 4 Integration:</strong> Real-time customer behavior data processing</li>
-                <li><strong>Advanced SQL Analytics:</strong> Complex business intelligence with strategic insights</li>
-                <li><strong>Python Visualization:</strong> Professional dashboard generation (matplotlib, seaborn)</li>
-                <li><strong>Business Intelligence:</strong> Executive-ready analytics with strategic recommendations</li>
-                <li><strong>Customer Intelligence:</strong> Retention, segmentation, LTV, churn, and journey optimization</li>
+                <li><strong>Progressive Complexity:</strong> EASY → MEDIUM → MEDIUM-HARD skill demonstration</li>
+                <li><strong>Business Intelligence:</strong> Strategic insights with automated recommendations</li>
+                <li><strong>Professional SQL:</strong> Clean, readable code with clear business logic</li>
+                <li><strong>Customer Analytics:</strong> Retention, segmentation, LTV, churn, and journey optimization</li>
+                <li><strong>Interview Excellence:</strong> Perfect for explaining SQL logic and business thinking</li>
             </ul>
         </div>
 
@@ -657,35 +675,35 @@ ORDER BY avg_sessions DESC;</div>
         <div class="business-impact">
             <h3>How to Present This Project for Senior Data Analyst Positions:</h3>
             <ol>
-                <li><strong>Lead with Business Impact:</strong> "I developed a customer intelligence platform that identified $180K in churn risk and prioritized retention investment..."</li>
-                <li><strong>Highlight Technical Excellence:</strong> "Using Google Analytics 4 BigQuery data, I implemented advanced cohort analysis and multi-touch attribution..."</li>
-                <li><strong>Demonstrate Strategic Thinking:</strong> "The segmentation revealed that VIP customers generate 5x more revenue, leading to targeted retention programs..."</li>
-                <li><strong>Show Scalability:</strong> "This framework is easily adaptable for different business models and can scale to millions of customers..."</li>
-                <li><strong>Connect to Revenue:</strong> "The churn prediction system helps protect $180K in at-risk revenue through proactive intervention..."</li>
-                <li><strong>Emphasize Real-Time Capability:</strong> "Using Google's real-time API ensures insights are always current for immediate business action..."</li>
+                <li><strong>Lead with Business Impact:</strong> "I developed a customer intelligence platform that segments 5,000+ customers and identifies high-value retention opportunities..."</li>
+                <li><strong>Highlight Progressive Complexity:</strong> "These 5 queries demonstrate SQL progression from basic aggregation to advanced window functions..."</li>
+                <li><strong>Demonstrate Strategic Thinking:</strong> "The segmentation revealed that VIP customers represent only 8% but generate 35% of revenue..."</li>
+                <li><strong>Show Readability Focus:</strong> "I prioritized clean, maintainable SQL that any team member can understand and modify..."</li>
+                <li><strong>Connect to Business Results:</strong> "The churn prediction system helps identify customers at risk before they leave..."</li>
+                <li><strong>Emphasize Practical Application:</strong> "Each query includes automated strategic recommendations for immediate business action..."</li>
             </ol>
         </div>
 
         <div class="key-concepts">
-            <h3>Advanced SQL Concepts Mastery Demonstrated:</h3>
+            <h3>SQL Skill Progression Demonstrated:</h3>
             <ul>
-                <li><strong>Expert Level:</strong> Complex CTEs, window functions, multi-touch attribution, behavioral modeling</li>
-                <li><strong>Business Intelligence:</strong> Strategic segmentation, predictive analytics, automated recommendations</li>
-                <li><strong>Big Data Processing:</strong> Google Analytics 4 BigQuery integration with millions of events</li>
-                <li><strong>Advanced Analytics:</strong> Cohort analysis, churn prediction, lifetime value modeling, journey optimization</li>
+                <li><strong>Foundation (EASY):</strong> Aggregation, subqueries, CASE WHEN, GROUP BY operations</li>
+                <li><strong>Intermediate (MEDIUM):</strong> Window functions, date arithmetic, predictive scoring</li>
+                <li><strong>Advanced (MEDIUM-HARD):</strong> Complex window functions, funnel analysis, journey optimization</li>
+                <li><strong>Professional Standards:</strong> Clean code, business focus, strategic automation</li>
             </ul>
         </div>
 
-        <h2>🚀 Strategic Business Impact</h2>
+        <h2>🚀 Strategic Business Value</h2>
         
         <div class="explanation">
-            <h3>Executive Summary of Business Value:</h3>
+            <h3>Executive Summary of Business Intelligence:</h3>
             <ul>
-                <li><strong>Customer Retention:</strong> Identified optimal retention periods and customer lifecycle patterns</li>
-                <li><strong>Revenue Protection:</strong> $180K in at-risk revenue identified through churn prediction</li>
-                <li><strong>Marketing Efficiency:</strong> 5 distinct customer segments for targeted campaign optimization</li>
-                <li><strong>Investment Prioritization:</strong> Clear LTV rankings for retention budget allocation</li>
-                <li><strong>Proactive Intelligence:</strong> Early warning system preventing customer churn</li>
+                <li><strong>Customer Retention:</strong> Lifecycle analysis for targeted retention investment</li>
+                <li><strong>Revenue Optimization:</strong> LTV-based customer prioritization and resource allocation</li>
+                <li><strong>Risk Management:</strong> Proactive churn prevention protecting customer base</li>
+                <li><strong>Marketing Efficiency:</strong> Behavioral segmentation for targeted campaign optimization</li>
+                <li><strong>Journey Optimization:</strong> Conversion funnel improvement and customer experience enhancement</li>
             </ul>
         </div>
 
@@ -694,17 +712,17 @@ ORDER BY avg_sessions DESC;</div>
         <div class="business-impact">
             <p><strong>Complete Customer Intelligence Platform:</strong></p>
             <ol>
-                <li>Google Analytics 4 real-time data integration</li>
-                <li>5 comprehensive SQL analytics (EASY to MEDIUM-HARD)</li>
-                <li>Professional Python dashboard generation</li>
-                <li>Executive-ready business intelligence reporting</li>
-                <li>Strategic recommendations with automated insights</li>
+                <li>Progressive SQL complexity demonstration (EASY to MEDIUM-HARD)</li>
+                <li>Clean, readable code with professional business logic</li>
+                <li>Strategic automation with actionable recommendations</li>
+                <li>Executive-ready visualizations and insights</li>
+                <li>Interview-perfect explanation and business storytelling</li>
             </ol>
         </div>
 
         <hr>
         <p style="text-align: center; color: #6c757d; font-size: 12px;">
-            Google Analytics 4 Powered Customer Intelligence Platform | Created by Salomón Santiago Esquivel | Advanced Business Analytics | 2025
+            Customer Behavior Analytics Intelligence Platform | Created by Salomón Santiago Esquivel | Professional SQL Demonstration | 2025
         </p>
     </div>
 </body>

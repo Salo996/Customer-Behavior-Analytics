@@ -1,66 +1,49 @@
 -- =================================================================
 -- CUSTOMER RETENTION ANALYSIS [EASY]
 -- =================================================================
--- Business Question: What is our customer retention rate by month?
--- Strategic Value: Identify retention trends and customer loyalty patterns
--- Technical Implementation: Simple cohort analysis with monthly retention
+-- Business Question: How many customers return after their first purchase?
+-- Strategic Value: Identify retention patterns for marketing campaigns
 
--- Customer retention analysis using simplified data structure
+-- Simple customer retention analysis
 SELECT 
     customer_id,
-    first_purchase_month,
-    last_purchase_month,
-    -- Calculate months between first and last purchase
-    CASE 
-        WHEN last_purchase_month = first_purchase_month THEN 'New Customer'
-        WHEN last_purchase_month = first_purchase_month + 1 THEN 'Month 1 Return'
-        WHEN last_purchase_month = first_purchase_month + 2 THEN 'Month 2 Return'
-        ELSE 'Long-term Customer'
-    END as retention_category,
+    first_purchase_date,
+    last_purchase_date,
     total_purchases,
-    total_spent
+    CASE 
+        WHEN total_purchases = 1 THEN 'One-time Customer'
+        WHEN total_purchases = 2 THEN 'Returning Customer'
+        WHEN total_purchases >= 3 THEN 'Loyal Customer'
+    END as customer_type
 FROM (
-    -- Get customer purchase summary
     SELECT 
         customer_id,
-        MIN(purchase_month) as first_purchase_month,
-        MAX(purchase_month) as last_purchase_month,
-        COUNT(*) as total_purchases,
-        SUM(purchase_amount) as total_spent
+        MIN(purchase_date) as first_purchase_date,
+        MAX(purchase_date) as last_purchase_date,
+        COUNT(*) as total_purchases
     FROM customer_purchases
     GROUP BY customer_id
 ) customer_summary
-ORDER BY total_spent DESC;
+ORDER BY total_purchases DESC;
 
--- Summary retention metrics
+-- Retention summary
 SELECT 
-    retention_category,
+    customer_type,
     COUNT(*) as customer_count,
-    ROUND(AVG(total_purchases), 1) as avg_purchases,
-    ROUND(AVG(total_spent), 2) as avg_spent,
-    -- Calculate percentage of each category
-    ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM customer_purchases), 2) as percentage
+    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) as percentage
 FROM (
     SELECT 
-        customer_id,
         CASE 
-            WHEN MAX(purchase_month) = MIN(purchase_month) THEN 'New Customer'
-            WHEN MAX(purchase_month) = MIN(purchase_month) + 1 THEN 'Month 1 Return'
-            WHEN MAX(purchase_month) = MIN(purchase_month) + 2 THEN 'Month 2 Return'
-            ELSE 'Long-term Customer'
-        END as retention_category,
-        COUNT(*) as total_purchases,
-        SUM(purchase_amount) as total_spent
+            WHEN COUNT(*) = 1 THEN 'One-time Customer'
+            WHEN COUNT(*) = 2 THEN 'Returning Customer'
+            WHEN COUNT(*) >= 3 THEN 'Loyal Customer'
+        END as customer_type
     FROM customer_purchases
     GROUP BY customer_id
 ) retention_data
-GROUP BY retention_category
+GROUP BY customer_type
 ORDER BY customer_count DESC;
 
 -- =================================================================
--- KEY BUSINESS METRICS:
--- 1. Retention Category: Customer lifecycle classification
--- 2. Customer Count: Number of customers in each retention stage
--- 3. Average Purchases: Purchase frequency by retention level
--- 4. Percentage Distribution: Retention pattern breakdown
+-- KEY INSIGHTS: Shows customer loyalty distribution and retention rates
 -- =================================================================

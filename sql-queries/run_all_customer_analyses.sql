@@ -3,148 +3,85 @@
 -- =================================================================
 -- Executive Summary: Complete customer behavior intelligence analysis
 -- Business Impact: Retention optimization, revenue growth, strategic insights
--- Technical Architecture: Advanced analytics with simplified, readable SQL
+-- Technical Architecture: Clean, readable SQL for professional demonstration
 --
 -- Created by: Salomón Santiago Esquivel
 -- Business Intelligence Analysis Suite
 -- =================================================================
 
 -- Analysis 1: Customer Retention Analysis [EASY]
--- Business Question: What is our customer retention rate by month?
--- Uses: Basic aggregation, CASE statements, GROUP BY, subqueries
+-- Business Question: How many customers return after their first purchase?
+-- Uses: Basic aggregation, CASE statements, subqueries
 
 -- Analysis 2: Customer Activity Segmentation [EASY] 
--- Business Question: How can we segment customers by activity levels?
--- Uses: Simple scoring calculations, customer classification, marketing strategy automation
+-- Business Question: How can we group customers by spending behavior?
+-- Uses: Customer classification, marketing strategy automation
 
 -- Analysis 3: Customer Lifetime Value Ranking [MEDIUM]
--- Business Question: Which customers have the highest lifetime value?
--- Uses: RANK() window functions, customer tier classification, strategic recommendations
+-- Business Question: Which customers are most valuable for retention?
+-- Uses: RANK() window functions, customer tier classification
 
 -- Analysis 4: Churn Risk Prediction Analysis [MEDIUM]
--- Business Question: Which customers are at risk of churning?
--- Uses: Risk scoring algorithms, date calculations, revenue impact analysis
+-- Business Question: Which customers might churn based on inactivity?
+-- Uses: Date calculations, risk scoring, retention strategies
 
 -- Analysis 5: Customer Journey Analytics [MEDIUM-HARD]
--- Business Question: How do customers progress through our sales funnel?
--- Uses: Advanced window functions, funnel analysis, conversion optimization
+-- Business Question: How do customers progress from visit to purchase?
+-- Uses: LAG() window functions, funnel analysis, UNION ALL
 
 -- =================================================================
 -- EXECUTIVE DASHBOARD SUMMARY
 -- =================================================================
 
 SELECT 
-    '=== CUSTOMER BEHAVIOR ANALYTICS EXECUTIVE SUMMARY ===' as executive_report,
-    CURRENT_TIMESTAMP() as report_generated;
+    'Customer Behavior Analytics Suite Complete' as executive_summary,
+    '5 Progressive SQL Queries: EASY → MEDIUM → MEDIUM-HARD' as technical_complexity,
+    'Retention, Segmentation, LTV, Churn, Journey Analysis' as business_areas_covered,
+    'Clean, Interview-Ready SQL with Business Intelligence Focus' as portfolio_value;
 
--- Key Performance Indicators
+-- Key Performance Indicators Summary
 SELECT 
-    'KEY PERFORMANCE INDICATORS' as metric_category,
-    'Customer Retention Rate' as metric_name,
-    'Month-over-month customer return patterns' as description,
-    'Critical for customer lifetime value optimization' as business_impact
+    'Customer Retention' as kpi_area,
+    'One-time vs Returning vs Loyal customer distribution' as metric_description,
+    'Target retention campaigns by customer loyalty level' as business_impact
 UNION ALL
 SELECT 
-    'KEY PERFORMANCE INDICATORS',
     'Customer Segmentation',
-    'Activity-based customer grouping for targeted marketing',
-    'Enables personalized campaigns and engagement strategies'
+    'VIP, Premium, Regular, Budget customer classification',
+    'Personalized marketing strategies by spending behavior'
 UNION ALL
 SELECT 
-    'KEY PERFORMANCE INDICATORS',
     'Lifetime Value Ranking',
-    'Revenue-based customer prioritization and tier classification',
-    'Drives retention investment and resource allocation'
+    'Platinum, Gold, Silver, Bronze customer tiers with rankings',
+    'Prioritize high-value customers for retention investment'
 UNION ALL
 SELECT 
-    'KEY PERFORMANCE INDICATORS',
     'Churn Risk Prediction',
-    'Behavioral risk scoring for proactive intervention',
-    'Prevents revenue loss through targeted retention campaigns'
+    'High, Medium, Low risk customers based on purchase recency',
+    'Proactive intervention to prevent customer loss'
 UNION ALL
 SELECT 
-    'KEY PERFORMANCE INDICATORS',
-    'Journey Optimization',
-    'Conversion funnel analysis and customer path optimization',
-    'Improves conversion rates and marketing efficiency';
+    'Journey Analytics',
+    'Customer progression from visitor to repeat buyer',
+    'Optimize conversion funnel and improve customer experience';
 
 -- Strategic Business Recommendations
 SELECT 
-    'STRATEGIC RECOMMENDATIONS' as analysis_category,
-    'Retention Programs' as recommendation_area,
-    'Implement tiered retention campaigns based on customer LTV rankings' as action_item,
-    'Reduce churn risk and increase customer lifetime value' as expected_outcome
-UNION ALL
-SELECT 
-    'STRATEGIC RECOMMENDATIONS',
-    'Personalization',
-    'Deploy activity-based segmentation for customized experiences',
-    'Improve engagement rates and conversion performance'
-UNION ALL
-SELECT 
-    'STRATEGIC RECOMMENDATIONS',
-    'Proactive Intervention',
-    'Launch churn prevention campaigns for high-risk customers',
-    'Protect revenue and maintain customer base stability'
-UNION ALL
-SELECT 
-    'STRATEGIC RECOMMENDATIONS',
-    'Conversion Optimization',
-    'Optimize customer journey paths and reduce conversion friction',
-    'Increase conversion rates and marketing ROI'
-UNION ALL
-SELECT 
-    'STRATEGIC RECOMMENDATIONS',
-    'Data-Driven Decision Making',
-    'Use behavioral insights for strategic customer initiatives',
-    'Improve business performance through evidence-based strategies';
-
--- Technical Implementation Summary
-SELECT 
-    'TECHNICAL SPECIFICATIONS' as specification_category,
-    'SQL Complexity' as component,
-    'Progressive difficulty: EASY → MEDIUM → MEDIUM-HARD' as implementation,
-    'Demonstrates SQL proficiency from basic to advanced concepts' as description
-UNION ALL
-SELECT 
-    'TECHNICAL SPECIFICATIONS',
-    'Analysis Approach',
-    'Customer-centric behavioral analytics with business intelligence',
-    'Readable, maintainable queries with clear business logic'
-UNION ALL
-SELECT 
-    'TECHNICAL SPECIFICATIONS',
-    'Business Intelligence',
-    'Executive-ready insights with strategic recommendations',
-    'Professional analysis suitable for senior leadership presentation'
-UNION ALL
-SELECT 
-    'TECHNICAL SPECIFICATIONS',
-    'Analytical Techniques',
-    'Retention analysis, segmentation, LTV calculation, churn prediction, journey optimization',
-    'Comprehensive customer analytics methodologies and business intelligence'
-UNION ALL
-SELECT 
-    'TECHNICAL SPECIFICATIONS',
-    'Strategic Framework',
-    'Customer behavior intelligence focusing on retention and value optimization',
-    'Scalable approach to customer analytics and business growth';
-
-SELECT 
-    '=== END OF EXECUTIVE SUMMARY ===' as report_footer,
-    'Customer Behavior Analytics Suite Complete' as status;
+    'Focus on loyal customer retention programs' as retention_strategy,
+    'Implement tiered service levels by customer value' as segmentation_strategy,
+    'Launch proactive campaigns for high-risk customers' as churn_prevention,
+    'Optimize conversion funnel for browser-to-buyer journey' as journey_optimization;
 
 -- =================================================================
 -- BUSINESS INTELLIGENCE ARCHITECTURE:
 -- 
--- Foundation Layer:     Customer retention and activity segmentation (EASY)
--- Strategic Layer:      Lifetime value ranking and churn prediction (MEDIUM)  
+-- Foundation Layer:     Customer retention and segmentation (EASY)
+-- Strategic Layer:      Lifetime value and churn prediction (MEDIUM)  
 -- Executive Layer:      Journey analytics and conversion optimization (MEDIUM-HARD)
 --
 -- Business Applications:
 -- - E-commerce customer optimization and retention strategies
--- - Subscription business churn prevention and LTV maximization
--- - Marketing funnel improvement and conversion optimization
--- - Customer experience enhancement and journey mapping
--- - Revenue protection and strategic growth initiatives
+-- - Marketing campaign targeting and personalization
+-- - Revenue protection through churn prevention
+-- - Customer experience improvement and funnel optimization
 -- =================================================================
